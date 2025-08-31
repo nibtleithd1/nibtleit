@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Système Leitner - Gestion de Flashcards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="site-background text-gray-800">
+    <div class="container mx-auto max-w-6xl p-5">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Système Leitner</h1>
+            <p class="text-gray-600">Apprentissage par répétition espacée</p>
+        </header>
+
+        <!-- Section configuration GitHub -->
+        <div id="github-config" class="bg-white rounded-lg shadow-md p-5 mb-6">
+            <h2 class="text-xl font-bold mb-4">Configuration GitHub</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Propriétaire du dépôt</label>
+                    <input type="text" id="repo-owner" class="w-full p-2 border rounded" placeholder="votre-nom-utilisateur">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom du dépôt</label>
+                    <input type="text" id="repo-name" class="w-full p-2 border rounded" placeholder="nom-du-dépôt">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Token d'accès GitHub</label>
+                    <input type="password" id="github-token" class="w-full p-2 border rounded" placeholder="ghp_xxx">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Chemin du fichier CSV</label>
+                    <input type="text" id="csv-path" class="w-full p-2 border rounded" value="flashcards.csv">
+                </div>
+            </div>
+            <button id="save-config" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Sauvegarder la configuration
+            </button>
+        </div>
+
+        <!-- Section gestion des decks -->
+        <div class="bg-white rounded-lg shadow-md p-5 mb-6">
+            <div class="flex flex-wrap justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Gestion des flashcards</h2>
+                <div class="flex gap-2">
+                    <button id="add-card-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        + Nouvelle carte
+                    </button>
+                    <button id="save-cards-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Sauvegarder sur GitHub
+                    </button>
+                    <button id="load-cards-btn" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                        Charger depuis GitHub
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <select id="deck-selector" class="p-2 border rounded min-w-[250px]">
+                    <option value="">Chargement des jeux...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Boîtes Leitner -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <!-- Les boîtes seront générées dynamiquement -->
+        </div>
+
+        <!-- Liste des cartes -->
+        <div id="cards-list-container" class="hidden bg-white rounded-lg shadow-md p-5 mb-6">
+            <h3 id="cards-list-title" class="text-xl font-bold mb-4">Cartes de la boîte <span id="current-box-number">1</span></h3>
+            <div id="cards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- Éditeur de carte -->
+        <div id="card-editor" class="hidden fixed inset-0 flex items-center justify-center p-5 z-50 bg-black bg-opacity-50">
+            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4" id="editor-title">Nouvelle carte</h3>
+                <form id="card-form" class="space-y-4">
+                    <input type="hidden" id="card-id">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                        <textarea id="card-question" class="w-full p-2 border rounded" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Image question (URL)</label>
+                        <input type="url" id="card-question-image" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Réponse</label>
+                        <textarea id="card-answer" class="w-full p-2 border rounded" rows="3" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Image réponse (URL)</label>
+                        <input type="url" id="card-answer-image" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" id="cancel-edit" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                            Annuler
+                        </button>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Sauvegarder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Visualisateur de carte -->
+        <div id="flashcard-container" class="hidden fixed inset-0 flex items-center justify-center p-5 z-50 bg-black bg-opacity-50">
+            <div class="flashcard bg-white rounded-xl shadow-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="question-section bg-gray-50 rounded-lg p-4 mb-5">
+                    <h3 class="font-bold text-lg mb-3">Question</h3>
+                    <div id="question-content" class="text-lg my-4"></div>
+                    <div id="last-reviewed" class="text-sm text-gray-500 italic"></div>
+                </div>
+                <button id="show-answer-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 mb-5">
+                    Voir la réponse
+                </button>
+                <div id="answer-section" class="hidden bg-gray-100 rounded-lg p-4 mt-5">
+                    <h3 class="font-bold text-lg mb-3">Réponse</h3>
+                    <div id="answer-content" class="text-lg my-4"></div>
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <button id="wrong-answer" class="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600">
+                            Faux
+                        </button>
+                        <button id="right-answer" class="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600">
+                            Vrai
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-between">
+                    <button id="edit-card-btn" class="text-blue-600 hover:text-blue-800">
+                        Modifier
+                    </button>
+                    <button id="delete-card-btn" class="text-red-600 hover:text-red-800">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chargement des modules JavaScript -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
